@@ -258,6 +258,72 @@ function getTokenList() {
 getTokenList();
 // setInterval(getTokenList, 30000);
 
+function fillRecentActivity(data, container) {
+    console.log(data);
+    const centerColTitle=createElementAndAppend(container, "h3", element_classes=["datapoint-name"], element_id = null, elementText="DEX DATA");
+    const priceContainer=createElementAndAppend(container, "div", element_classes=["data-field-named"], element_id = null, elementText=null);
+    const title=createElementAndAppend(priceContainer, "p", element_classes=["datapoint-name"], element_id = null, elementText='PRICE: ');
+    const fieldValue=createElementAndAppend(priceContainer, "p", element_classes=null, element_id = null, elementText=` $${data.data.attributes.price_usd}`);
+
+    const priceChanges = data.included[0].attributes.price_change_percentage;
+    const volumeChanges = data.included[0].attributes.volume_usd;
+    const priceVolTitle=createElementAndAppend(container, "p", element_classes=["datapoint-name"], element_id = null, elementText='PRICE/VOL CHG');
+    const changeTable=createElementAndAppend(container, "table", element_classes=null, element_id = null, elementText=null);
+    const changeTableHead=createElementAndAppend(changeTable, "thead", element_classes=null, element_id = null, elementText=null);
+    const changeTableHeadRow=createElementAndAppend(changeTableHead, "tr", element_classes=null, element_id = null, elementText=null);
+    const changeTitles = ['change', '5m', '1h', '6h', '24h'];
+    changeTitles.forEach(title => {
+        const titleField=createElementAndAppend(changeTableHeadRow, "th", element_classes=null, element_id = null, elementText=title);
+
+    })
+    const changeTableBody=createElementAndAppend(changeTable, "tbody", element_classes=null, element_id = null, elementText=null);
+    const PriceChangeRow=createElementAndAppend(changeTableBody, "tr", element_classes=null, element_id = null, elementText=null);
+    const priceChangeTitleVal=createElementAndAppend(PriceChangeRow, "td", element_classes=null, element_id = null, elementText='PRICE: ');
+    const changeValues=['m5', 'h1', 'h6', 'h24'];
+
+    changeValues.forEach(change => {
+        const priceVal=createElementAndAppend(PriceChangeRow, "td", element_classes=null, element_id = null, elementText=priceChanges[change]);
+        if (priceChanges[change]<0) {
+            priceVal.classList.add('negative-val');
+        }
+        if (priceChanges[change]>0) {
+            priceVal.classList.add('positive-val');
+        }
+    })
+
+    const volumeChangeRow=createElementAndAppend(changeTableBody, "tr", element_classes=null, element_id = null, elementText=null);
+    const volumeChangeTitleVal=createElementAndAppend(volumeChangeRow, "td", element_classes=null, element_id = null, elementText='VOL: ');
+
+    changeValues.forEach(change => {
+        const volValue=volumeChanges[change];
+        const volValueFinal=Math.round((parseFloat(volValue)*100))/100
+        const priceVal=createElementAndAppend(volumeChangeRow, "td", element_classes=null, element_id = null, elementText=volValueFinal);
+    })
+    const tranSecTitle=createElementAndAppend(container, "p", element_classes=["datapoint-name"], element_id = null, elementText='TRAN CHG');
+    const tranData = data.included[0].attributes.transactions;
+    const tranTable=createElementAndAppend(container, "table", element_classes=null, element_id = null, elementText=null);
+    const tranTableHead=createElementAndAppend(tranTable, "thead", element_classes=null, element_id = null, elementText=null);
+    const tranTableHeadRow=createElementAndAppend(tranTableHead, "tr", element_classes=null, element_id = null, elementText=null);
+    const tranTitles = ['trade', '5m', '15m', '30m', '1h', '24h'];
+    tranTitles.forEach(title => {
+        const titleField=createElementAndAppend(tranTableHeadRow, "th", element_classes=null, element_id = null, elementText=title);
+
+    })
+    const tranChangeValues=['m5', 'm15', 'm30', 'h1', 'h24'];
+    const tranFieldTypes = ['buys', 'sells', 'buyers', 'sellers'];
+    const tranTableBody=createElementAndAppend(tranTable, "tbody", element_classes=null, element_id = null, elementText=null);
+    tranFieldTypes.forEach(tranField => {
+        const tranDataRow=createElementAndAppend(tranTableBody, "tr", element_classes=null, element_id = null, elementText=null);
+        // const tranTitleVal=createElementAndAppend(tranDataRow, "td", element_classes=null, element_id = null, elementText=`${tranField.toUpperCase()}: `);
+        const tranTitleVal=createElementAndAppend(tranDataRow, "td", element_classes=null, element_id = null, elementText=`${tranField.toUpperCase()}: `);
+        tranChangeValues.forEach(tranVal => {
+            const newField=createElementAndAppend(tranDataRow, "td", element_classes=null, element_id = null, elementText=tranData[tranVal][tranField]);
+
+        })
+
+    })
+
+}
 
 function createTokenDetailsTab(tokenAddress, data) {
     // still need to figure out how to reference and loop
@@ -290,20 +356,6 @@ function createTokenDetailsTab(tokenAddress, data) {
 
         })
     }
-    document.getElementById(`detailed-tab-recentActivity-${tokenAddress}`).addEventListener('click', () => {
-        fetchTokenData(tokenAddress).then(data => {
-            if (data) {
-                // Process the data here
-                console.log(data);
-                
-                // Example: Update the UI with the fetched data
-
-            }
-        }).catch(error => {
-            console.error("Error handling token data:", error);
-        });
-
-    })
 
     
     // Overview data
@@ -311,7 +363,10 @@ function createTokenDetailsTab(tokenAddress, data) {
     const topRow=createElementAndAppend(overviewPage, "div", element_classes=["top-row"], element_id = `overview-top-row-${tokenAddress}`, elementText=null);
     const leftColumn=createElementAndAppend(topRow, "div", element_classes=["left-column"], element_id = `overview-left-column-${tokenAddress}`, elementText=null);
     const tokenData = data.token[0];
-    const nameAndSymbolContainer=createElementAndAppend(leftColumn, "p", element_classes=["datapoint-name"], element_id = null, elementText=`${tokenData.name} - ${tokenData.symbol}`);
+    const leftColTitle=createElementAndAppend(leftColumn, "h3", element_classes=["datapoint-name"], element_id = null, elementText="PUMP.FUN DATA");
+    
+    const nameAndSymbolField=createElementAndAppend(leftColumn, "p", element_classes=["datapoint-name"], element_id = null, elementText=`${tokenData.name} - $${tokenData.symbol}`);
+    const tokenAddressField=createElementAndAppend(leftColumn, "p", element_classes=["data-field-named"], element_id = null, elementText=tokenAddress);
     const description=createElementAndAppend(leftColumn, "p", element_classes=["data-field-named"], element_id = null, elementText=`${tokenData.description}`);
     // switchBetweenPages(newTab, newPage);
     
@@ -328,9 +383,8 @@ function createTokenDetailsTab(tokenAddress, data) {
     const devLink=`https://solscan.io/account/${summaryData.dev}`
     const devContainer=createElementAndAppend(leftColumn, "div", element_classes=["data-field-named"], element_id = null, elementText=null);
     const devTitle=createElementAndAppend(devContainer, "p", element_classes=["datapoint-name"], element_id = null, elementText='Dev:');
-    // const devField=createElementAndAppend(devContainer, "p", element_classes=null, element_id = null, elementText=null, href=traderLink);
-    // const devHashField=createElementAndAppend(devField, "a", element_classes=null, element_id = null, elementText=`${summaryData.dev.substring(0,7)}...`, href=devLink);
-    const devField=createElementAndAppend(devContainer, "a", element_classes=null, element_id = null, elementText=`${summaryData.dev.substring(0,7)}...`, href=devLink);
+    const devFieldText=createElementAndAppend(devContainer, "p", element_classes=null, element_id = null, elementText=null, href=null);
+    const devField=createElementAndAppend(devFieldText, "a", element_classes=["datapoint-name"], element_id = null, elementText=`${summaryData.dev.substring(0,7)}...`, href=devLink);
 
     const summaryDic={bondingTime:'Bond Time', transactions:'Transactions', holders:'Holders', heldByDev:'Held by Dev', heldByTop5:'Held by top 5', heldByTop10:'Held by top 10'}
     for (const key in summaryDic) {
@@ -344,6 +398,25 @@ function createTokenDetailsTab(tokenAddress, data) {
     pfNote.style.fontSize="12px";
     pfNote.style.fontStyle="italic";
 
+    //Center column
+    const middleColumn=createElementAndAppend(topRow, "div", element_classes=["center-column"], element_id = `overview-left-column-${tokenAddress}`, elementText=null);
+    // const centerColTitle=createElementAndAppend(middleColumn, "p", element_classes=["datapoint-name"], element_id = null, elementText="DEX DATA");
+    
+    // const testVal=createElementAndAppend(middleColumn, "p", element_classes=null, element_id = null, elementText='testestestests tes test set s et se t setset ');
+    fetchTokenData(tokenAddress).then(data => {
+        if (data) {
+            // Process the data here
+            console.log(data);
+            fillRecentActivity(data, middleColumn)
+            
+            // Example: Update the UI with the fetched data
+
+        }
+    }).catch(error => {
+        console.error("Error handling token data:", error);
+    });
+
+    //right column
     const rightColumn=createElementAndAppend(topRow, "div", element_classes=["right-column"], element_id = `overview-right-column-${tokenAddress}`, elementText=null);
     const largeImage=document.createElement('img');
     largeImage.src=tokenData.image_url;
@@ -364,7 +437,7 @@ function createTokenDetailsTab(tokenAddress, data) {
     }
 
     const bottomContainer=createElementAndAppend(overviewPage, "div", element_classes=["bottom-container"], element_id = `overview-bottom-row-${tokenAddress}`, elementText=null);
-    const redFlagsTitle=createElementAndAppend(bottomContainer, "p", element_classes=["datapoint-name"], element_id = null, elementText='RED FLAGS');
+    const redFlagsTitle=createElementAndAppend(bottomContainer, "h3", element_classes=["datapoint-name"], element_id = null, elementText='RED FLAGS');
     data.summaryData.redFlags.forEach(flag => {
         const redFlag=createElementAndAppend(bottomContainer, "p", element_classes=["red-flag"], element_id = null, elementText=flag);
         redFlag.style.color='red';
@@ -387,8 +460,13 @@ function createTokenDetailsTab(tokenAddress, data) {
         const tranSummaryRow=createElementAndAppend(tranSummaryTableBody, "tr", element_classes=null, element_id = null, elementText=null);
         const wallet=owner.owner
         const traderLink=`https://solscan.io/account/${wallet}`
+        var traderWalletText=`${wallet.substring(0,7)}...`;
+        if (owner.owner===data.summaryData.dev) {
+            tranSummaryRow.classList.add('marked-row');
+            traderWalletText+='DEV';
+        }
         const traderField=createElementAndAppend(tranSummaryRow, "td", element_classes=null, element_id = null, elementText=null, href=traderLink);
-        const traderFieldHref=createElementAndAppend(traderField, "a", element_classes=null, element_id = null, elementText=`${wallet.substring(0,7)}...`, href=traderLink);
+        const traderFieldHref=createElementAndAppend(traderField, "a", element_classes=null, element_id = null, elementText=traderWalletText, href=traderLink);
         // summaryData.dev
         const tradesField=createElementAndAppend(tranSummaryRow, "td", element_classes=null, element_id = null, elementText=owner.trades);
         const netTokensField=createElementAndAppend(tranSummaryRow, "td", element_classes=null, element_id = null, elementText=formatNumbersSimple.format(parseInt(owner.netTokens)));
@@ -398,7 +476,7 @@ function createTokenDetailsTab(tokenAddress, data) {
         const firstTradeField=createElementAndAppend(tranSummaryRow, "td", element_classes=null, element_id = null, elementText=formatter.format(new Date(owner.firstTrade)));
         const lastTradeField=createElementAndAppend(tranSummaryRow, "td", element_classes=null, element_id = null, elementText=formatter.format(new Date(owner.lastTrade)));
         const percentField=createElementAndAppend(tranSummaryRow, "td", element_classes=null, element_id = null, elementText=Math.round(owner.supply_pct*1000)/10);
-        
+
 
     })
 

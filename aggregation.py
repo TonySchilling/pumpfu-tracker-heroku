@@ -48,37 +48,45 @@ def getBondingTimeStr(bondingTime):
 
 
 def getTransactionSummary(gf, tf, df):
-    redFlags=[]
-    bondingFlag=None
-    bondingStr=''
-    bt=tf['date'].max()-tf['date'].min()
-    bondingSeconds=(bt.days*86400)+bt.seconds
-    bondingData=getBondingTimeStr(bt)
-    if bondingSeconds<60:
-        bondingFlag='Fast Bond'
-        bondingStr=f'{bt.seconds} seconds'
-    elif bondingSeconds<172800:
-        bondingStr=f'{bondingData["h"]} hr {bondingData["m"]} mn {bondingData["s"]} sec'
-    else:
-        bondingStr=f'{bondingData["d"]} days {bondingData["h"]} hr {bondingData["m"]} mn {bondingData["s"]} sec'
-        if bt.days>3:
-            bondingFla='Old Token Suddenly Bonding'
-    if bondingFlag != None:
-        redFlags.append(bondingFlag)
-    transactions=len(tf)
-    if transactions<10:
-        redFlags.append('Few Transactions')
-    totalTokens=gf['netTokens'].sum()
-    holders=len(gf[gf['netTokens']>0])
-    holders1m=len(gf[gf['netTokens']>1000000])
-    creator=df['creator'].iloc[0]
-    heldByDev=gf[gf['owner']==creator]['netTokens'].mean()/totalTokens
-    heldByTop5=gf.sort_values('netTokens', ascending=False).head(5)['netTokens'].sum()/totalTokens
-    heldByTop10=gf.sort_values('netTokens', ascending=False).head(10)['netTokens'].sum()/totalTokens
-    if heldByTop5>.7:
-        redFlags.append('Supply Control')
-    if heldByDev>.5:
-        redFlags.append('Supply Control - Dev')
-
-    data = {'bondingTime':bondingStr, 'transactions': transactions, 'holders':holders, 'holders1m':holders1m, 'dev':creator, 'heldByDev':f'{round(heldByDev*100,1)}%','heldByTop5':f'{round(heldByTop5*100,1)}%','heldByTop10':f'{round(heldByTop10*100,1)}%', 'redFlags':redFlags}
+    data = {'bondingTime': '--', 'transactions': '--', 'holders': '--', 'holders1m': '--', 'dev':df['creator'].iloc[0], 'heldByDev':'--','heldByTop5':'--','heldByTop10':'--', 'redFlags':['ERROR, NO TRANSACTIONS FOUND']}
+    try:
+        redFlags=[]
+        bondingFlag=None
+        bondingStr=''
+        bt=tf['date'].max()-tf['date'].min()
+        bondingSeconds=(bt.days*86400)+bt.seconds
+        bondingData=getBondingTimeStr(bt)
+        if bondingSeconds<60:
+            bondingFlag='Fast Bond'
+            bondingStr=f'{bt.seconds} seconds'
+        elif bondingSeconds<172800:
+            bondingStr=f'{bondingData["h"]} hr {bondingData["m"]} mn {bondingData["s"]} sec'
+        else:
+            bondingStr=f'{bondingData["d"]} days {bondingData["h"]} hr {bondingData["m"]} mn {bondingData["s"]} sec'
+            if bt.days>3:
+                bondingFla='Old Token Suddenly Bonding'
+        if bondingFlag != None:
+            redFlags.append(bondingFlag)
+        transactions=len(tf)
+        if transactions<10:
+            redFlags.append('Few Transactions')
+        totalTokens=gf['netTokens'].sum()
+        holders=len(gf[gf['netTokens']>0])
+        holders1m=len(gf[gf['netTokens']>1000000])
+        creator=df['creator'].iloc[0]
+        heldByDev=gf[gf['owner']==creator]['netTokens'].mean()/totalTokens
+        heldByTop5=gf.sort_values('netTokens', ascending=False).head(5)['netTokens'].sum()/totalTokens
+        heldByTop10=gf.sort_values('netTokens', ascending=False).head(10)['netTokens'].sum()/totalTokens
+        if heldByTop5>.7:
+            redFlags.append('Supply Control')
+        if heldByDev>.5:
+            redFlags.append('Supply Control - Dev')
+        if len(tf)>1000:
+            redFlags.append('High Transactions')
+        if len(tf)<10:
+            redFlags.append('Low Transactions')
+        # redFlags.append(str(len(tf)))
+        data = {'bondingTime':bondingStr, 'transactions': transactions, 'holders':holders, 'holders1m':holders1m, 'dev':creator, 'heldByDev':f'{round(heldByDev*100,1)}%','heldByTop5':f'{round(heldByTop5*100,1)}%','heldByTop10':f'{round(heldByTop10*100,1)}%', 'redFlags':redFlags}
+    except:
+        print('Error aggregating')
     return data

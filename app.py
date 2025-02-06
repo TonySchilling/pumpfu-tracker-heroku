@@ -7,6 +7,7 @@ from updateDatabase import *
 import json
 from databaseManagement import *
 
+
 app=Flask(__name__)
 
 # conn = sqlite3.connect("pump_fun.db")  # Creates a file called pump_fun.db
@@ -18,14 +19,25 @@ app=Flask(__name__)
 # database="pump_fun_database.db"
 database="appDatabase.db"
 
-def basicQuery(query):
-    conn = sqlite3.connect(database)  # Creates a file called pump_fun.db
-    cursor = conn.cursor()
-    cursor.execute(query)
-    data=cursor.fetchall()
-    conn.close()
 
-    return data
+
+def authenticate_request():
+    api_key = request.headers.get("admin-key")  # Custom header
+    if api_key != 'testKey':
+        return jsonify({"error": "Unauthorized"}), 403
+
+# def basicQuery(query):
+#     conn = sqlite3.connect(database)  # Creates a file called pump_fun.db
+#     cursor = conn.cursor()
+#     try:
+#         cursor.execute(query)
+#         data=cursor.fetchall()
+#     except:
+#         print('Coulnt run query')
+#     cursor.close()
+#     conn.close()
+
+#     return data
 
 
 def getTokensDf():
@@ -86,6 +98,19 @@ def home():
     df=getTokensDf()
     data = df.to_dict(orient='records')[:5]
     return render_template('index.html', tokenData=data)
+
+@app.route('/getSpecificData', methods=['POST'])
+def getSpecificData():
+
+    data=request.json
+    print(data)
+    query=data['query']
+    print(f'query: {query}')
+    data=basicQuery(query)
+
+    return jsonify(data)
+    
+
 
 @app.route('/createTables')
 def createTables():
