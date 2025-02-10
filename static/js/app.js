@@ -13,8 +13,10 @@ class AppManager {
         this.previousTokens=[];
         this.newTokens=[];
 
+        this.tokenTabs=[];
         this.activeTabs=[];
         this.alertInterval=null;
+        this.dexIntervals=[];
         this.audio=audio;
 
         this.alerting=false;
@@ -47,6 +49,20 @@ class AppManager {
             console.log("played alert sound");
         }
     }
+
+    handleDexIntervals(newInterval) {
+        this.dexIntervals.forEach(interval => {
+            clearInterval(interval);
+            this.dexIntervals=[];
+        })
+        if (newInterval===null) {
+            return;
+        }
+        this.dexIntervals.push(newInterval);
+
+    }
+
+
 }
 
 const appManager = new AppManager(alertSound);
@@ -259,7 +275,12 @@ getTokenList();
 // setInterval(getTokenList, 30000);
 
 function fillRecentActivity(data, container) {
-    console.log(data);
+    container.innerHTML="";
+    if (data===null) {
+        console.log('No dex data');
+        return
+    }
+    // console.log(data);
     const centerColTitle=createElementAndAppend(container, "h3", element_classes=["datapoint-name"], element_id = null, elementText="DEX DATA");
     const priceContainer=createElementAndAppend(container, "div", element_classes=["data-field-named"], element_id = null, elementText=null);
     const title=createElementAndAppend(priceContainer, "p", element_classes=["datapoint-name"], element_id = null, elementText='PRICE: ');
@@ -325,6 +346,26 @@ function fillRecentActivity(data, container) {
 
 }
 
+function populateDexData(tokenAddress, container) {
+    fetchTokenData(tokenAddress).then(data => {
+        if (data) {
+            // Process the data here
+            console.log('Dex data:');
+            console.log(data);
+            try {
+                fillRecentActivity(data, container);
+            }
+            catch(err) {
+                console.log(err);
+                const fieldValue=createElementAndAppend(container, "p", element_classes=null, element_id = null, elementText='Dex data not yet available');
+            }
+            
+        }
+    }).catch(error => {
+        console.error("Error handling token data:", error);
+    });
+}
+
 function createTokenDetailsTab(tokenAddress, data) {
     // still need to figure out how to reference and loop
     const mainDataContainer = document.getElementById('all-data-container');
@@ -337,10 +378,14 @@ function createTokenDetailsTab(tokenAddress, data) {
     const x_button=createElementAndAppend(newTab, "div", element_classes=["x_button"], element_id = `x_button-${tokenAddress}`, elementText="x");
     const newPage=createElementAndAppend(mainDataContainer, "div", element_classes=["content-container"], element_id = `data-page-${tokenAddress}`, elementText=null);
     x_button.addEventListener('click', function(event) {
+
+        appManager.handleDexIntervals(null);
         event.stopPropagation();
         newTab.remove();
         newPage.remove();
         switchBetweenPages(document.getElementById('main-tab-tokens'), document.getElementById('data-page-tokens'),document.getElementById('all-data-container'),document.getElementById('main-tabs'));
+        appManager.tokenTabs=appManager.tokenTabs.filter(item => item !== tokenAddress);
+        console.log(appManager.tokenTabs);
     })
     const detailsRibbon=createElementAndAppend(newPage, "div", element_classes=["select-ribbon"], element_id = `ribbon-details-${tokenAddress}`, elementText=null);
     const detailsPageContainer=createElementAndAppend(newPage, "div", element_classes=null, element_id = `ribbon-page-container-${tokenAddress}`, elementText=null);
@@ -356,6 +401,8 @@ function createTokenDetailsTab(tokenAddress, data) {
 
         })
     }
+
+    
 
     
     // Overview data
@@ -403,18 +450,12 @@ function createTokenDetailsTab(tokenAddress, data) {
     // const centerColTitle=createElementAndAppend(middleColumn, "p", element_classes=["datapoint-name"], element_id = null, elementText="DEX DATA");
     
     // const testVal=createElementAndAppend(middleColumn, "p", element_classes=null, element_id = null, elementText='testestestests tes test set s et se t setset ');
-    fetchTokenData(tokenAddress).then(data => {
-        if (data) {
-            // Process the data here
-            console.log(data);
-            fillRecentActivity(data, middleColumn)
-            
-            // Example: Update the UI with the fetched data
+    populateDexData(tokenAddress, middleColumn);
+    const dexInterval = setInterval(() => {
+        populateDexData(tokenAddress, middleColumn);
+    }, 300000);
+    appManager.handleDexIntervals(dexInterval);
 
-        }
-    }).catch(error => {
-        console.error("Error handling token data:", error);
-    });
 
     //right column
     const rightColumn=createElementAndAppend(topRow, "div", element_classes=["right-column"], element_id = `overview-right-column-${tokenAddress}`, elementText=null);
@@ -539,22 +580,43 @@ function createTokenDetailsTab(tokenAddress, data) {
 
         
     })
-    // const largeImage=createElementAndAppend(rightColumn, "img", element_classes=["large-image"], element_id =null, elementText=null, src=tokenData.image_url, alt='Large Image');
-    // const smallImageContainer=createElementAndAppend(rightColumn, "div", element_classes=["small-images"], element_id =null, elementText=null,);
+    switchBetweenPages(document.getElementById(`detailed-tab-overview-${tokenAddress}`), document.getElementById(`detailed-page-overview-${tokenAddress}`), document.getElementById(`ribbon-page-container-${tokenAddress}`), document.getElementById(`ribbon-details-${tokenAddress}`));
+    appManager.tokenTabs.push(tokenAddress);
 }
 
 
 function openTokenData(tokenAddress) {
 
-    fetch(`/token_details/${tokenAddress}`)
-    .then(response => response.json())  // Parse the JSON response
-    .then(data => {
-
-        createTokenDetailsTab(tokenAddress, data)
+    if (appManager.tokenTabs.includes(tokenAddress)) {
+        switchBetweenPages(document.getElementById(`data-tab-${tokenAddress}`), document.getElementById(`data-page-${tokenAddress}`),document.getElementById('all-data-container'),document.getElementById('main-tabs'));
+        switchBetweenPages(document.getElementById(`detailed-tab-overview-${tokenAddress}`), document.getElementById(`detailed-page-overview-${tokenAddress}`), document.getElementById(`ribbon-page-container-${tokenAddress}`), document.getElementById(`ribbon-details-${tokenAddress}`));
+        
+    }
+    else {
+        fetch(`/token_details/${tokenAddress}`)
+        .then(response => response.json())  // Parse the JSON response
+        .then(data => {
     
-    })
-    .catch(error => {
-        console.error('Error fetching token data:', error);
-    });
+            createTokenDetailsTab(tokenAddress, data)
+        
+        })
+        .catch(error => {
+            console.error('Error fetching token data:', error);
+        });
+    
+
+
+    }
+
+    // fetch(`/token_details/${tokenAddress}`)
+    // .then(response => response.json())  // Parse the JSON response
+    // .then(data => {
+
+    //     createTokenDetailsTab(tokenAddress, data)
+    
+    // })
+    // .catch(error => {
+    //     console.error('Error fetching token data:', error);
+    // });
 
 }

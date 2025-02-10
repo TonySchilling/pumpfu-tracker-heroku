@@ -44,7 +44,7 @@ def getTokensDf():
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
     # query="SELECT * FROM tokens"
-    query='SELECT * FROM tokens ORDER BY last_trade_timestamp DESC LIMIT 50'
+    query='SELECT * FROM tokens ORDER BY last_trade_timestamp DESC LIMIT 30'
     df=pd.read_sql(query, conn)
     conn.close()
     return df
