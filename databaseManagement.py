@@ -1,5 +1,5 @@
-import sys
-sys.path.append(r'D:\crypto\tokenTrackerAttempts\attempt4\pumpfun-tracker\venv\Lib\site-packages')
+# import sys
+# sys.path.append(r'D:\crypto\tokenTrackerAttempts\attempt4\pumpfun-tracker\venv\Lib\site-packages')
 
 import pandas as pd
 import sqlite3
