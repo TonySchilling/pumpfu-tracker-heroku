@@ -204,11 +204,51 @@ async function fetchTokenData(tokenAddress) {
     }
 }
 
-function getTokenList() {
+async function fetchTokenDataMulti(tokenAddresses) {
+    const baseUrl = "https://api.geckoterminal.com/api/v2/networks/solana/tokens/multi/";
+    const url = baseUrl + encodeURIComponent(tokenAddresses.join(',')); // Join tokens with a comma
+
+    const headers = {
+        'Accept': 'application/json'
+    };
+
+    const params = new URLSearchParams({
+        'include': 'top_pools'
+    });
+
+    try {
+        const response = await fetch(`${url}?${params.toString()}`, {
+            method: 'GET',
+            headers: headers
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch token data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(data); // Handle/display the response data
+        return data;
+    } catch (error) {
+        console.error("Error fetching token data:", error);
+    }
+}
+
+
+function getTokenList1() {
     console.log(`Checked for tokens ${new Date()}`);
     fetch('/tokens')
         .then(response => response.json())  // Parse the JSON response
         .then(data => {
+            // const tokenAddresses = [];
+            // data.forEach(d =>{
+            //     tokenAddresses.push(d.token_address);
+            // })
+            // fetchTokenData(tokenAddresses).then(response => {
+            //     console.log('geckotdata');
+            //     console.log(response)
+            // })
+
             appManager.previousTokens=appManager.currentTokens;
             appManager.currentTokens=[];
             appManager.newTokens=[];
@@ -270,6 +310,179 @@ function getTokenList() {
             console.error('Error fetching token data:', error);
         });
 }
+
+function addGeckoDataToTokenData(data, geckoData) {
+
+    data.forEach(d => {
+        const tokenAddress = d.token_address;
+        // console.log(`Searching ${tokenAddress}`);
+        d.geckoData=null;
+        geckoData.data.forEach(gd => {
+            if (gd.attributes.address===tokenAddress) {
+                // console.log(`Found ${tokenAddress}`);
+                if (gd.relationships.top_pools.data.length>0) {
+                    const poolId = gd.relationships.top_pools.data[0].id;
+                    geckoData.included.forEach(poolData => {
+                        if (poolData.id === poolId) {
+                            d.geckoData= poolData;
+                        }
+
+                    })
+
+                }
+            }
+        })
+    })
+    // return data
+}
+
+
+function formatVolume(num) {
+    if (num >= 1_000_000_000) {
+        return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+    } else if (num >= 1_000_000) {
+        return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    } else if (num >= 1_000) {
+        return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    } else {
+        return num.toString();
+    }
+}
+
+
+function colorCodeElement(element, value, class1, class2) {
+    if (value>0) {
+        element.classList.add(class1);
+    }
+    if (value<0) {
+        element.classList.add(class2);
+    }
+}
+
+function getTokenList() {
+    console.log(`Checked for tokens ${new Date()}`);
+    fetch('/tokens')
+        .then(response => response.json())  // Parse the JSON response
+        .then(data => {
+            console.log(data)
+            const tokenAddresses = [];
+            data.forEach(d =>{
+                tokenAddresses.push(d.token_address);
+            })
+            fetchTokenDataMulti(tokenAddresses).then(response => {
+                console.log('geckotdata');
+                // console.log(response)
+                addGeckoDataToTokenData(data, response);
+                console.log(data);
+
+                appManager.previousTokens=appManager.currentTokens;
+                appManager.currentTokens=[];
+                appManager.newTokens=[];
+    
+                const tableBody = document.getElementById('table-body-token')
+                tableBody.innerHTML = "";
+    
+                data.forEach((token) => {
+                    const tokenAddress = token.token_address;
+                    const row = document.createElement("tr");
+    
+                    // Create table cells
+                    const nameCell = document.createElement("td");
+                    nameCell.textContent = token.name;
+                    row.appendChild(nameCell);
+    
+                    const symbolCell = document.createElement("td");
+                    symbolCell.textContent = token.symbol;
+                    row.appendChild(symbolCell);
+    
+                    const marketCapCell = document.createElement("td");
+                    marketCapCell.textContent = formatDollars.format(token.usd_market_cap);
+                    row.appendChild(marketCapCell);
+    
+                    const createdCell = document.createElement("td");
+                    const createdDate=new Date(token.created_timestamp);
+                    createdCell.textContent = formatter.format(createdDate);
+                    row.appendChild(createdCell);
+                    
+                    const bondedCell = document.createElement("td");
+                    const bondedDate = new Date(token.last_trade_timestamp);
+                    bondedCell.textContent = formatter.format(bondedDate);
+                    row.appendChild(bondedCell);
+                    if (token.geckoData === null) {
+                        for (let i = 0; i < 8; i++) {
+                            const fillerCell = document.createElement('td');
+                            fillerCell.textContent = "--";
+                            row.append(fillerCell);
+
+                        }
+
+                    }
+                    else {
+
+                    
+                        const priceChanges = ['m5', 'h1', 'h6', 'h24']
+                        priceChanges.forEach(p => {
+                            const priceCell = document.createElement('td');
+                            const priceChange=token.geckoData.attributes.price_change_percentage[p];
+                            if (priceChange == 0) {
+                                priceCell.textContent="--";
+                            }
+                            else {
+
+                                priceCell.textContent=priceChange;
+                                colorCodeElement(priceCell, priceChange, "positive-val", "negative-val");
+                            }
+
+                            row.append(priceCell);
+                        })
+                        const volumeChanges = ['m5', 'h1', 'h6', 'h24']
+                        volumeChanges.forEach(v => {
+                            const volCell = document.createElement('td');
+                            const volAmt = token.geckoData.attributes.volume_usd[v];
+                            if (volAmt == 0) {
+                                volCell.textContent="--"
+                            }
+                            else {
+                                volCell.textContent=formatVolume(Math.round(volAmt));
+                                colorCodeElement(volCell, volAmt, "positive-val", "negative-val");
+                                row.append(volCell);
+
+                            }
+                            
+                        })
+                    }
+        
+                    // const addressCell = document.createElement("td");
+                    // addressCell.textContent = tokenAddress;
+                    // row.appendChild(addressCell);
+    
+                    if (!appManager.previousTokens.includes(tokenAddress) & appManager.previousTokens.length>0) {
+                        row.classList.add('new-token');
+                        appManager.newTokens.push(tokenAddress);
+    
+                    }
+                    appManager.currentTokens.push(tokenAddress);
+                    
+                    row.addEventListener('click', () => {
+                        row.classList.remove('new-token');
+                        const tokenAddress = token.token_address;
+                        openTokenData(tokenAddress);
+                    })
+    
+                    // Append the row to the table body
+                    tableBody.appendChild(row);
+                });
+            })
+
+
+            // console.log(appManager);
+            appManager.triggerAlert();
+        })
+        .catch(error => {
+            console.error('Error fetching token data:', error);
+        });
+}
+
 
 getTokenList();
 // setInterval(getTokenList, 30000);
