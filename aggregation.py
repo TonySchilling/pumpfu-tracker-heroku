@@ -85,6 +85,8 @@ def getTransactionSummary(gf, tf, df):
             redFlags.append('High Transactions')
         if len(tf)<10:
             redFlags.append('Low Transactions')
+        if df['twitter'].iloc[0]==None and df['website'].iloc[0]==None and df['telegram'].iloc[0]==None and df['twitter'].iloc[0]=='' and df['website'].iloc[0]=='' and df['telegram'].iloc[0]=='':
+            redFlags.append('No Socials')
         # redFlags.append(str(len(tf)))
         data = {'bondingTime':bondingStr, 'transactions': transactions, 'holders':holders, 'holders1m':holders1m, 'dev':creator, 'heldByDev':f'{round(heldByDev*100,1)}%','heldByTop5':f'{round(heldByTop5*100,1)}%','heldByTop10':f'{round(heldByTop10*100,1)}%', 'redFlags':redFlags}
     except:

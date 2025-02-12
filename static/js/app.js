@@ -46,7 +46,6 @@ class AppManager {
         
         if (this.newTokens.length>0 & this.alerting===true) {
             this.audio.play().catch(error => console.error("Error playing sound:", error));
-            console.log("played alert sound");
         }
     }
 
@@ -103,35 +102,49 @@ function createElementAndAppend(parent, tagName, element_classes=null, element_i
     return element;
 }
 
+function createLinkedImage (parent, link, imPath) {
+    const linkElement=document.createElement('a');
+    linkElement.href=link;
+    linkElement.target='_blank';
+    const smallImage=document.createElement('img');
+    smallImage.src=imPath;
+    smallImage.alt='small image';
+    linkElement.appendChild(smallImage);
+    parent.appendChild(linkElement);
+
+}
+
 document.getElementById('popup-close').addEventListener('click', () => {
     const popup=document.getElementById('popup');
     popup.style.display="none";
 })
 
 document.getElementById('about-button').addEventListener('click', () => {
-    updateInfoPopup('about')
-})
-
-document.getElementById('topTokens-button').addEventListener('click', () => {
-    updateInfoPopup('topTokens')
-})
-
-document.getElementById('futurePlans-button').addEventListener('click', () => {
-    updateInfoPopup('futurePlans')
-})
-function updateInfoPopup(message) {
-    const popupDic = {about: {title: 'ABOUT', message: "The goal of this app is to share real-time alerts and data every time a pump.fun token bonds, to help you avoid scams and sift through the nonsense. It's still a work in progress but I've got a lot of cool ideas. So follow along and share your suggestions on X @ShiteCoinQUant"},
-    topTokens: {title: "TOP TOKENS", message: "Nothing here yet. But as this app develops and grows, I'd like to add cool things like analyses of the most successful tokens and see what we can learn from them! More to come."},
-    futurePlans: {title: "FUTURE PLANS", message: "I'm just getting started. The next step will be implementing alerts and real-time data so users can see new tokens right as they bond. After that, who knows. I'd like to incorporate more data from various API's to give people as much information as possible, maybe expand the data beyond pumpfun tokens, and much more. Stay tuned!"}}
-
     const popup=document.getElementById('popup');
-    const popupTitle=document.getElementById('popup-title');
-    const popupMessage=document.getElementById('popup-text');
-    popupTitle.textContent=popupDic[message].title;
-    popupMessage.textContent=popupDic[message].message;
     popup.style.display="flex";
+    // updateInfoPopup('about')
+})
 
-}
+// document.getElementById('topTokens-button').addEventListener('click', () => {
+//     updateInfoPopup('topTokens')
+// })
+
+// document.getElementById('futurePlans-button').addEventListener('click', () => {
+//     updateInfoPopup('futurePlans')
+// })
+// function updateInfoPopup(message) {
+//     const popupDic = {about: {title: 'ABOUT', message: "The goal of this app is to share real-time alerts and data every time a pump.fun token bonds, to help you avoid scams and sift through the nonsense. It's still a work in progress but I've got a lot of cool ideas. So follow along and share your suggestions on X @ShiteCoinQUant"},
+//     topTokens: {title: "TOP TOKENS", message: "Nothing here yet. But as this app develops and grows, I'd like to add cool things like analyses of the most successful tokens and see what we can learn from them! More to come."},
+//     futurePlans: {title: "FUTURE PLANS", message: "I'm just getting started. The next step will be implementing alerts and real-time data so users can see new tokens right as they bond. After that, who knows. I'd like to incorporate more data from various API's to give people as much information as possible, maybe expand the data beyond pumpfun tokens, and much more. Stay tuned!"}}
+
+//     const popup=document.getElementById('popup');
+//     const popupTitle=document.getElementById('popup-title');
+//     const popupMessage=document.getElementById('popup-text');
+//     popupTitle.textContent=popupDic[message].title;
+//     popupMessage.textContent=popupDic[message].message;
+//     popup.style.display="flex";
+
+// }
 
 
 const formatter = new Intl.DateTimeFormat('en-US', {
@@ -197,7 +210,7 @@ async function fetchTokenData(tokenAddress) {
         }
 
         const data = await response.json();
-        // console.log(data);
+
         return data;
     } catch (error) {
         console.error("Error fetching token data:", error);
@@ -227,7 +240,7 @@ async function fetchTokenDataMulti(tokenAddresses) {
         }
 
         const data = await response.json();
-        console.log(data); // Handle/display the response data
+
         return data;
     } catch (error) {
         console.error("Error fetching token data:", error);
@@ -240,14 +253,6 @@ function getTokenList1() {
     fetch('/tokens')
         .then(response => response.json())  // Parse the JSON response
         .then(data => {
-            // const tokenAddresses = [];
-            // data.forEach(d =>{
-            //     tokenAddresses.push(d.token_address);
-            // })
-            // fetchTokenData(tokenAddresses).then(response => {
-            //     console.log('geckotdata');
-            //     console.log(response)
-            // })
 
             appManager.previousTokens=appManager.currentTokens;
             appManager.currentTokens=[];
@@ -303,7 +308,7 @@ function getTokenList1() {
                 // Append the row to the table body
                 tableBody.appendChild(row);
             });
-            // console.log(appManager);
+
             appManager.triggerAlert();
         })
         .catch(error => {
@@ -315,11 +320,11 @@ function addGeckoDataToTokenData(data, geckoData) {
 
     data.forEach(d => {
         const tokenAddress = d.token_address;
-        // console.log(`Searching ${tokenAddress}`);
+
         d.geckoData=null;
         geckoData.data.forEach(gd => {
             if (gd.attributes.address===tokenAddress) {
-                // console.log(`Found ${tokenAddress}`);
+
                 if (gd.relationships.top_pools.data.length>0) {
                     const poolId = gd.relationships.top_pools.data[0].id;
                     geckoData.included.forEach(poolData => {
@@ -364,16 +369,14 @@ function getTokenList() {
     fetch('/tokens')
         .then(response => response.json())  // Parse the JSON response
         .then(data => {
-            console.log(data)
+
             const tokenAddresses = [];
             data.forEach(d =>{
                 tokenAddresses.push(d.token_address);
             })
             fetchTokenDataMulti(tokenAddresses).then(response => {
-                console.log('geckotdata');
-                // console.log(response)
+
                 addGeckoDataToTokenData(data, response);
-                console.log(data);
 
                 appManager.previousTokens=appManager.currentTokens;
                 appManager.currentTokens=[];
@@ -439,14 +442,14 @@ function getTokenList() {
                         volumeChanges.forEach(v => {
                             const volCell = document.createElement('td');
                             const volAmt = token.geckoData.attributes.volume_usd[v];
+                            row.append(volCell);
                             if (volAmt == 0) {
                                 volCell.textContent="--"
                             }
                             else {
                                 volCell.textContent=formatVolume(Math.round(volAmt));
-                                colorCodeElement(volCell, volAmt, "positive-val", "negative-val");
-                                row.append(volCell);
-
+                                // colorCodeElement(volCell, volAmt, "positive-val", "negative-val");
+                                // row.append(volCell);
                             }
                             
                         })
@@ -474,8 +477,6 @@ function getTokenList() {
                 });
             })
 
-
-            // console.log(appManager);
             appManager.triggerAlert();
         })
         .catch(error => {
@@ -490,10 +491,10 @@ getTokenList();
 function fillRecentActivity(data, container) {
     container.innerHTML="";
     if (data===null) {
-        console.log('No dex data');
+
         return
     }
-    // console.log(data);
+
     const centerColTitle=createElementAndAppend(container, "h3", element_classes=["datapoint-name"], element_id = null, elementText="DEX DATA");
     const priceContainer=createElementAndAppend(container, "div", element_classes=["data-field-named"], element_id = null, elementText=null);
     const title=createElementAndAppend(priceContainer, "p", element_classes=["datapoint-name"], element_id = null, elementText='PRICE: ');
@@ -563,8 +564,7 @@ function populateDexData(tokenAddress, container) {
     fetchTokenData(tokenAddress).then(data => {
         if (data) {
             // Process the data here
-            console.log('Dex data:');
-            console.log(data);
+
             try {
                 fillRecentActivity(data, container);
             }
@@ -598,7 +598,7 @@ function createTokenDetailsTab(tokenAddress, data) {
         newPage.remove();
         switchBetweenPages(document.getElementById('main-tab-tokens'), document.getElementById('data-page-tokens'),document.getElementById('all-data-container'),document.getElementById('main-tabs'));
         appManager.tokenTabs=appManager.tokenTabs.filter(item => item !== tokenAddress);
-        console.log(appManager.tokenTabs);
+
     })
     const detailsRibbon=createElementAndAppend(newPage, "div", element_classes=["select-ribbon"], element_id = `ribbon-details-${tokenAddress}`, elementText=null);
     const detailsPageContainer=createElementAndAppend(newPage, "div", element_classes=null, element_id = `ribbon-page-container-${tokenAddress}`, elementText=null);
@@ -637,8 +637,7 @@ function createTokenDetailsTab(tokenAddress, data) {
         const fieldValue=createElementAndAppend(container, "p", element_classes=null, element_id = null, elementText=allDetailedData[key]);
         
     }
-
-
+    console.log(data);
     const summaryData=data.summaryData;
     const devLink=`https://solscan.io/account/${summaryData.dev}`
     const devContainer=createElementAndAppend(leftColumn, "div", element_classes=["data-field-named"], element_id = null, elementText=null);
@@ -652,6 +651,20 @@ function createTokenDetailsTab(tokenAddress, data) {
         const title=createElementAndAppend(container, "p", element_classes=["datapoint-name"], element_id = null, elementText=`${summaryDic[key]}:`);
         const fieldValue=createElementAndAppend(container, "p", element_classes=null, element_id = null, elementText=summaryData[key]);
         
+    }
+    const twitterLink=data.token[0].twitter;
+    const telegramLink=data.token[0].telegram;
+    const siteLink=data.token[0].website;
+
+    if (twitterLink !== null | telegramLink !== null | siteLink !== null) {
+        const socialsContainer=createElementAndAppend(leftColumn, "div", element_classes=["small-images"], element_id = null, elementText=null);
+        const socialsList = [[twitterLink, 'xlogo'], [telegramLink, 'telegramlogo'], [siteLink, 'websitelogo']]
+        socialsList.forEach(soc => {
+            if (soc[0] !== null) {
+                createLinkedImage (socialsContainer, soc[0], `static/${soc[1]}.png`);
+            }
+        })
+
     }
 
     const pfNote=createElementAndAppend(leftColumn, "p", element_classes=null, element_id = null, elementText="*data as of bonding on pump.fun");

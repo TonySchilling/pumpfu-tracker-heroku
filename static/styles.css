@@ -128,6 +128,7 @@ td.positive-val {
     z-index: 1000;
     align-items: center; /* Align vertically center */
     justify-content: center; /* Align horizontally center */
+
 }
 
 .popup-content {
@@ -136,7 +137,7 @@ td.positive-val {
     border-radius: 10px;
     width: 60vw;
     height: 45vh;
-    text-align: center;
+    text-align: left;
     position: relative;
 }
 
@@ -423,6 +424,10 @@ table tr.marked-row {
     width: 2em; /* Each small image takes up 30% of the container */
     height: auto; /* Maintain aspect ratio */
     border-radius: 8px; /* Rounded corners */
+}
+
+.small-images img:hover {
+    transform: scale(1.2)
 }
 
 .large-text {
