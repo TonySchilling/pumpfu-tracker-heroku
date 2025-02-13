@@ -32,6 +32,7 @@ class AppManager {
             alertText.textContent='OFF';
             this.alerting = false;
             clearInterval(this.interval);
+            this.interval=null;
         }
         else {
             getTokenList();
@@ -45,6 +46,7 @@ class AppManager {
     triggerAlert() {
         
         if (this.newTokens.length>0 & this.alerting===true) {
+            console.log("PLayed sound");
             this.audio.play().catch(error => console.error("Error playing sound:", error));
         }
     }
@@ -251,7 +253,7 @@ async function fetchTokenDataMulti(tokenAddresses) {
 function getTokenList1() {
     console.log(`Checked for tokens ${new Date()}`);
     fetch('/tokens')
-        .then(response => response.json())  // Parse the JSON response
+        .then(response => response.json()) 
         .then(data => {
 
             appManager.previousTokens=appManager.currentTokens;
@@ -422,7 +424,6 @@ function getTokenList() {
                     }
                     else {
 
-                    
                         const priceChanges = ['m5', 'h1', 'h6', 'h24']
                         priceChanges.forEach(p => {
                             const priceCell = document.createElement('td');
@@ -475,9 +476,10 @@ function getTokenList() {
                     // Append the row to the table body
                     tableBody.appendChild(row);
                 });
+                appManager.triggerAlert();
             })
 
-            appManager.triggerAlert();
+            // appManager.triggerAlert();
         })
         .catch(error => {
             console.error('Error fetching token data:', error);
