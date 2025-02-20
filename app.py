@@ -182,6 +182,17 @@ def existing_tokens():
 
     return jsonify(data)
 
+
+@app.route('/searchToken', methods=['POST'])
+def searchToken():
+
+    data=request.json
+    searchTerm=data['searchTerm']
+    results=searchForTokens(searchTerm)
+    
+    return jsonify(results)
+
+
 @app.route('/resetDatabase')
 def resetDatabase():
     reinitializeTable(databaseName="appDatabase.db")

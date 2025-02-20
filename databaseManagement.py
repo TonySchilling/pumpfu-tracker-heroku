@@ -230,3 +230,14 @@ def basicQuery(query):
     conn.close()
 
     return data
+
+
+def searchForTokens(searchTerm, databaseName="appDatabase.db"):
+    conn = sqlite3.connect(databaseName)
+    cursor = conn.cursor()
+    query=f"SELECT name, symbol, token_address, usd_market_cap FROM tokens WHERE LOWER(token_address) LIKE '{searchTerm.lower()}' OR LOWER(name) LIKE '%{searchTerm.lower()}%'"
+    cursor.execute(query)
+    results=cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return results

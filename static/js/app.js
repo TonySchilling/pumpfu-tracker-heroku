@@ -22,6 +22,7 @@ class AppManager {
         this.alerting=false;
 
     }
+    
 
     toggleAlerts() {
         const alertButton = document.getElementById('alert-toggle');
@@ -56,10 +57,13 @@ class AppManager {
             clearInterval(interval);
             this.dexIntervals=[];
         })
-        if (newInterval===null) {
+        if (newInterval===null) {            
             return;
         }
-        this.dexIntervals.push(newInterval);
+        else {
+            this.dexIntervals.push(newInterval);
+
+        }
 
     }
 
@@ -68,11 +72,20 @@ class AppManager {
 
 const appManager = new AppManager(alertSound);
 
+
 document.getElementById('alert-toggle').addEventListener('click', () => {
     appManager.toggleAlerts();
 
 })
 
+// Main listener
+document.addEventListener("click", (e) => {
+    const searchDropdown = document.getElementById("searchDropdown");
+    const searchBox = document.getElementById("searchBox");
+    if (!searchBox.contains(e.target) && !searchDropdown.contains(e.target)) {
+        searchDropdown.classList.remove("active");
+    }
+});
 
 function createElementAndAppend(parent, tagName, element_classes=null, element_id = null, elementText=null, href=null, src=null, alt=null) {
     const element = document.createElement(tagName);
@@ -188,6 +201,7 @@ function checkBeforeSwitching(activeTab) {
 
 const tokenTab = document.getElementById('main-tab-tokens');
 tokenTab.addEventListener('click', function(event) {
+    appManager.handleDexIntervals(null);
     switchBetweenPages(event.currentTarget, document.getElementById('data-page-tokens'),document.getElementById('all-data-container'),document.getElementById('main-tabs'));
 
 })
@@ -488,7 +502,7 @@ function getTokenList() {
 
 
 getTokenList();
-// setInterval(getTokenList, 30000);
+
 
 function fillRecentActivity(data, container) {
     container.innerHTML="";
@@ -534,7 +548,13 @@ function fillRecentActivity(data, container) {
     changeValues.forEach(change => {
         const volValue=volumeChanges[change];
         const volValueFinal=Math.round((parseFloat(volValue)*100))/100
-        const priceVal=createElementAndAppend(volumeChangeRow, "td", element_classes=null, element_id = null, elementText=volValueFinal);
+        const volValCell=createElementAndAppend(volumeChangeRow, "td", element_classes=null, element_id = null, elementText=volValueFinal);
+        if (volValue == 0) {
+            volValCell.textContent ="--";
+        }
+        else {
+            volValCell.textContent=formatVolume(Math.round(volValue));
+        }
     })
     const tranSecTitle=createElementAndAppend(container, "p", element_classes=["datapoint-name"], element_id = null, elementText='TRAN CHG');
     const tranData = data.included[0].attributes.transactions;
@@ -563,6 +583,7 @@ function fillRecentActivity(data, container) {
 }
 
 function populateDexData(tokenAddress, container) {
+    console.log(`Getting dex data for ${tokenAddress}`);
     fetchTokenData(tokenAddress).then(data => {
         if (data) {
             // Process the data here
@@ -613,6 +634,14 @@ function createTokenDetailsTab(tokenAddress, data) {
         detailedTab.addEventListener('click', () => {
             switchBetweenPages(detailedTab, detailedPage, detailsPageContainer, detailsRibbon);
 
+            if (key === "overview") {
+                populateDexData(tokenAddress, document.getElementById(`overview-middle-column-${tokenAddress}`));
+                const dexInterval = setInterval(() => {
+                    populateDexData(tokenAddress, document.getElementById(`overview-middle-column-${tokenAddress}`));
+                }, 30000);
+                appManager.handleDexIntervals(dexInterval);
+            }
+
 
         })
     }
@@ -639,7 +668,7 @@ function createTokenDetailsTab(tokenAddress, data) {
         const fieldValue=createElementAndAppend(container, "p", element_classes=null, element_id = null, elementText=allDetailedData[key]);
         
     }
-    console.log(data);
+
     const summaryData=data.summaryData;
     const devLink=`https://solscan.io/account/${summaryData.dev}`
     const devContainer=createElementAndAppend(leftColumn, "div", element_classes=["data-field-named"], element_id = null, elementText=null);
@@ -674,14 +703,14 @@ function createTokenDetailsTab(tokenAddress, data) {
     pfNote.style.fontStyle="italic";
 
     //Center column
-    const middleColumn=createElementAndAppend(topRow, "div", element_classes=["center-column"], element_id = `overview-left-column-${tokenAddress}`, elementText=null);
+    const middleColumn=createElementAndAppend(topRow, "div", element_classes=["center-column"], element_id = `overview-middle-column-${tokenAddress}`, elementText=null);
     // const centerColTitle=createElementAndAppend(middleColumn, "p", element_classes=["datapoint-name"], element_id = null, elementText="DEX DATA");
     
     // const testVal=createElementAndAppend(middleColumn, "p", element_classes=null, element_id = null, elementText='testestestests tes test set s et se t setset ');
     populateDexData(tokenAddress, middleColumn);
     const dexInterval = setInterval(() => {
         populateDexData(tokenAddress, middleColumn);
-    }, 300000);
+    }, 30000);
     appManager.handleDexIntervals(dexInterval);
 
 
@@ -805,6 +834,11 @@ function createTokenDetailsTab(tokenAddress, data) {
     // switchBetweenPages(`detailed-tab-overview-${tokenAddress}`, `detailed-page-overview-${tokenAddress}`, detailsPageContainer, detailsRibbon);
     newTab.addEventListener('click', () => {
         switchBetweenPages(newTab, newPage,document.getElementById('all-data-container'),document.getElementById('main-tabs'));
+        populateDexData(tokenAddress, document.getElementById(`overview-middle-column-${tokenAddress}`));
+        const dexInterval = setInterval(() => {
+            populateDexData(tokenAddress, document.getElementById(`overview-middle-column-${tokenAddress}`));
+        }, 30000);
+        appManager.handleDexIntervals(dexInterval);
 
         
     })
@@ -848,3 +882,56 @@ function openTokenData(tokenAddress) {
     // });
 
 }
+
+
+function populateSearchResults(data) {
+    searchDropdown = document.getElementById("searchDropdown");
+    if (data.length>0) {
+        const searchTableBody=document.getElementById("table-body-searchResults");
+        searchDropdown.classList.add("active");
+        searchTableBody.innerHTML="";
+
+        data.forEach(d => {
+            const row=createElementAndAppend(searchTableBody, "tr", element_classes=null, element_id = null, elementText=null);
+            const name=createElementAndAppend(row, "td", element_classes=null, element_id = null, elementText=d[0]);
+            const symbol=createElementAndAppend(row, "td", element_classes=null, element_id = null, elementText=d[1]);
+            const marketCap=createElementAndAppend(row, "td", element_classes=null, element_id = null, elementText=formatDollars.format(d[3]));
+            row.addEventListener("click", () => {
+                openTokenData(d[2]);
+                searchDropdown.classList.remove("active");
+            })
+        })
+        // searchDropdown.classList.remove("hidden");
+        
+
+
+    }
+}
+
+const searchBox = document.getElementById('searchBox');
+const searchButton = document.getElementById('searchButton');
+searchButton.addEventListener('click', () => {
+    const searchTerm = searchBox.value;
+    searchBox.value = "";
+
+    if (searchTerm.length>2) {
+
+
+        fetch("/searchToken", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ searchTerm: searchTerm})
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            populateSearchResults(data);
+        })
+    }
+    else {
+        console.log("too short");
+    }
+
+})

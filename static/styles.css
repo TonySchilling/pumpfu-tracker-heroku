@@ -69,6 +69,7 @@ header nav ul li a {
 
 header nav ul li div:hover {
     color: #00aaff;
+    cursor: default;
 }
 
 main {
@@ -108,7 +109,7 @@ td.positive-val {
     background-color: #ff00002d;
     color: #ff0000a5;
     border-radius: 5px;
-    padding: 2px;
+    /* padding: 2px; */
 }
 
 #alert-toggle.alerting {
@@ -165,6 +166,7 @@ table {
     overflow: hidden;
     /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); */
     box-shadow: var(--container-shadow);
+    cursor: default;
 }
 
 table th, table td {
@@ -286,7 +288,7 @@ table tr.marked-row {
     flex: 1; /* Allow tabs to grow and shrink equally */
     padding: 10px 20px; /* Add padding for spacing */
     /* text-align: center; */
-    cursor: pointer; /* Change cursor to pointer on hover */
+    cursor: pointer;
     background-color: #00000030;
     border: 1px solid #89898930;
     border-bottom: none;
@@ -396,6 +398,7 @@ table tr.marked-row {
 
 .data-field-named {
     display: flex;
+    cursor: default;
 
 }
 
@@ -427,7 +430,7 @@ table tr.marked-row {
 }
 
 .small-images img:hover {
-    transform: scale(1.2)
+    transform: scale(1.2);
 }
 
 .large-text {
@@ -443,6 +446,100 @@ table tr.marked-row {
     color: #ffffff;
 }
 
-/* .x_button {
+/* SEARCH BOX */
+/* #searchBox {
+    min-width: 25vw;
+    border-radius: 5px;
+    
+} */
+
+#searchBox {
+    min-width: 25vw;
+    flex: 1; /* Allows it to expand */
+    background: #2a2a2a; /* Slightly lighter dark */
+    border: 1px solid #444; /* Subtle border */
+    color: #ddd; /* Light text for contrast */
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease-in-out;
+}
+
+#searchBox:focus {
+    border-color: #dbdbdb; /* Highlight color */
+    box-shadow: 0 0 6px rgba(122, 122, 122, 0.5);
+}
+
+.space-between-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+#searchButton {
+    cursor: pointer;
+    padding: 8px;
+    margin-left: 5px;
+    border-radius: 4px;
+    background: #444; /* Dark grey */
+    /* transition: scale(1.2); */
+}
+
+#searchButton:hover {
+    background: #979797; /* Blue hover effect */
+}
+
+#searchButton img {
+    height: 1.5em;
+
+}
+
+/* #searchButton img:hover {
+
+    transform: scale(1.2);
 
 } */
+
+.search-container {
+    position: relative; /* Makes this a reference for absolute positioning */
+    display: flex;
+    align-items: center;
+    /* background: #1e1e1e; */
+    /* border-radius: 6px; */
+    /* padding: 5px; */
+    /* align-items: center; */
+}
+
+/* Dropdown styling */
+#searchDropdown {
+    position: absolute;
+    top: 100%;  /* Places it directly below the search box */
+    left: 0;
+    width: 100%;  /* Matches the width of the search box */
+    background: var(--background-dark);
+    /* border: 1px solid #ccc; */
+    border-top: none; /* Avoids double border with input */
+    /* max-height: 200px; */
+    overflow-y: auto; /* Adds scrolling if needed */
+    display: none; /* Initially hidden */
+    z-index: 100; /* Ensures it's above other elements */
+}
+
+/* Show the dropdown when active */
+#searchDropdown.active {
+    display: block;
+}
+
+/* Style each dropdown item */
+.dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-item:hover {
+    background: #f0f0f0;
+}
