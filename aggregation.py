@@ -63,8 +63,8 @@ def getTransactionSummary(gf, tf, df):
             bondingStr=f'{bondingData["h"]} hr {bondingData["m"]} mn {bondingData["s"]} sec'
         else:
             bondingStr=f'{bondingData["d"]} days {bondingData["h"]} hr {bondingData["m"]} mn {bondingData["s"]} sec'
-            if bt.days>3:
-                bondingFla='Old Token Suddenly Bonding'
+        if bt.days>3:
+            bondingFlag='Old Token Suddenly Bonding'
         if bondingFlag != None:
             redFlags.append(bondingFlag)
         transactions=len(tf)
