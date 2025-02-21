@@ -144,8 +144,8 @@ def getTokenDataAdditional():
 
 @app.route('/')
 def home():
-    # df=getTokensDf()
-    df=getTokenDataAdditional()
+    df=getTokensDf()
+    # df=getTokenDataAdditional()
     data = df.to_dict(orient='records')[:5]
     return render_template('index.html', tokenData=data)
 
@@ -170,8 +170,8 @@ def createTables():
 
 @app.route('/tokens')
 def tokens():
-    # df=getTokensDf()
-    df=getTokenDataAdditional()
+    df=getTokensDf()
+    # df=getTokenDataAdditional()
     data = df.to_dict(orient='records')
     return jsonify(data)
 
