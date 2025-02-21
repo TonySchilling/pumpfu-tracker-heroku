@@ -88,6 +88,11 @@ td.negative-val {
     border-radius: 10px; */
 }
 
+td.warning {
+    color: #ff0000;
+}
+
+
 td.positive-val {
     color: #00ff66;
     font-weight: bold;

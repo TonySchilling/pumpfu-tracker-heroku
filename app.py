@@ -6,7 +6,7 @@ from aggregation import *
 from updateDatabase import *
 import json
 from databaseManagement import *
-
+import math
 
 app=Flask(__name__)
 
@@ -91,11 +91,61 @@ def getTokensTransactions(address):
     tf['absTokenAmount']=abs(tf['tokenAmount'])
     return tf
 
+def bondingSecondsToString(bondingSeconds):
+    days=math.floor(bondingSeconds/86400)
+    bondingSeconds-=days*86400
+    hours=math.floor(bondingSeconds/3600)
+    bondingSeconds-=hours*3600
+    minutes=math.floor(bondingSeconds/60)
+    bondingSeconds-=minutes*60
+    seconds=bondingSeconds
+    stringVal=""
+    if days>0:
+        stringVal+=f'{days}d '
+    if hours>0:
+        stringVal+=f'{hours}h '
+    if minutes>0:
+        stringVal+=f'{minutes}m '
+    if seconds>0:
+        stringVal+=f'{int(seconds)}s'
+    if bondingSeconds==0:
+        stringVal="0s"
+    return stringVal
+
+def getTokenDataAdditional():
+    returnData=""
+    conn = sqlite3.connect(database)
+    try:
+        df=getTokensDf()
+        df['bond']=(df['last_trade_timestamp']-df['created_timestamp'])/1000
+        df.loc[df['bond']<0, 'bond'] = 0
+        df['bondStr']=df['bond'].apply(bondingSecondsToString)
+        addresses=df['token_address'].unique().tolist()
+        placeholders = ', '.join(['?'] * len(addresses))
+        query = f"SELECT * FROM transactions WHERE mint IN ({placeholders})"
+        tf = pd.read_sql(query, conn, params=addresses)
+        tf.loc[tf['tradeType']==0, 'tokenAmount']=-tf['tokenAmount']
+        tf['tokenAmount']=tf['tokenAmount']/1000000
+        gf0=tf.groupby(['mint', 'owner']).agg({'hash':'count', 'tokenAmount':'sum'})
+        gf0=gf0.reset_index()
+        gf0.columns=['token_address', 'owner', 'count', 'sum']
+        gf1=gf0.groupby('token_address').agg({'count':'sum'}).reset_index()
+        gf2=gf0[gf0['sum']>0].groupby('token_address').agg({'owner':'count'}).reset_index()
+        gf3=gf1.merge(gf2, on='token_address', how='outer')
+        gf3.columns=['token_address', 'transactions', 'holders']
+        df=df.merge(gf3, on='token_address', how="left")
+        returnData=df
+    except:
+        print('Error')
+    conn.close()
+
+    return returnData
 
 
 @app.route('/')
 def home():
-    df=getTokensDf()
+    # df=getTokensDf()
+    df=getTokenDataAdditional()
     data = df.to_dict(orient='records')[:5]
     return render_template('index.html', tokenData=data)
 
@@ -120,7 +170,8 @@ def createTables():
 
 @app.route('/tokens')
 def tokens():
-    df=getTokensDf()
+    # df=getTokensDf()
+    df=getTokenDataAdditional()
     data = df.to_dict(orient='records')
     return jsonify(data)
 

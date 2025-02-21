@@ -241,3 +241,5 @@ def searchForTokens(searchTerm, databaseName="appDatabase.db"):
     cursor.close()
     conn.close()
     return results
+
+

@@ -385,6 +385,7 @@ function getTokenList() {
     fetch('/tokens')
         .then(response => response.json())  // Parse the JSON response
         .then(data => {
+            console.log(data);
 
             const tokenAddresses = [];
             data.forEach(d =>{
@@ -427,6 +428,29 @@ function getTokenList() {
                     const bondedDate = new Date(token.last_trade_timestamp);
                     bondedCell.textContent = formatter.format(bondedDate);
                     row.appendChild(bondedCell);
+
+                    const bTimeCell = document.createElement("td");
+                    bTimeCell.textContent = token.bondStr;
+                    row.appendChild(bTimeCell);
+                    if (token.bond>86400 | token.bond<60) {
+                        bTimeCell.classList.add('warning');
+                    }
+
+                    const pfTransCell = document.createElement("td");
+                    pfTransCell.textContent = token.transactions;
+                    row.appendChild(pfTransCell);
+                    if (token.transactions>1000 | token.transactions<10) {
+                        pfTransCell.classList.add('warning');
+                    }
+
+                    const pfHoldersCell = document.createElement("td");
+                    pfHoldersCell.textContent = token.holders;
+                    row.appendChild(pfHoldersCell);
+                    if (token.holders>1000 | token.holders<10) {
+                        pfHoldersCell.classList.add('warning');
+                    }
+
+
                     if (token.geckoData === null) {
                         for (let i = 0; i < 8; i++) {
                             const fillerCell = document.createElement('td');
